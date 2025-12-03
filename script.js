@@ -207,7 +207,33 @@ function downloadWord() {
 }
 
 function downloadPDF() {
-    window.print();
+    const output = document.getElementById('output');
+    
+    if (!output.innerHTML.trim()) {
+        alert('Please format some text first!');
+        return;
+    }
+
+    // Detect if mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // Show instructions for mobile
+        const proceed = confirm(
+            'To save as PDF on mobile:\n\n' +
+            '1. In the print dialog, tap "More options" or the three dots\n' +
+            '2. Look for "Save as PDF" or "Print to PDF"\n' +
+            '3. Tap it and then tap the Print/Save button\n\n' +
+            'Click OK to open print dialog.'
+        );
+        
+        if (proceed) {
+            window.print();
+        }
+    } else {
+        // Desktop: direct print
+        window.print();
+    }
 }
 
 function showToast() {
