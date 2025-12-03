@@ -1,0 +1,272 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Custom scrollbar for cleaner look */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+@media print {
+    @page {
+        /* Minimal margins to maximize content space */
+        margin: 0.5cm 0.5cm 1cm 0.5cm;
+        size: auto;
+    }
+
+    /* Page numbers at bottom center */
+    @page {
+        @bottom-center {
+            content: counter(page) " / " counter(pages);
+            font-size: 10pt;
+            color: #666;
+        }
+    }
+
+    html,
+    body {
+        height: auto !important;
+        overflow: visible !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body {
+        background: white;
+        padding: 0 !important;
+        display: block;
+        font-size: 12pt !important;
+    }
+
+    /* Reset layout containers to allow full height printing */
+    main {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: white !important;
+    }
+
+    #output-container {
+        height: auto !important;
+        overflow: visible !important;
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: white !important;
+    }
+
+    /* Hide all non-content elements */
+    .no-print,
+    header,
+    button,
+    textarea,
+    main > section:first-child,
+    #input {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Hide toolbar elements inside sections */
+    section > div.h-12,
+    section > div.flex.items-center,
+    #output-container > div:first-child {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #output {
+        font-size: 12pt !important;
+        line-height: 1.4;
+        color: black;
+        white-space: pre-wrap;
+        overflow: visible !important;
+        height: auto !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        background: white !important;
+    }
+
+    /* All text elements - 12pt */
+    #output * {
+        font-size: 12pt !important;
+    }
+
+    /* Headings - 14pt */
+    #output h3,
+    h3 {
+        font-size: 14pt !important;
+        font-weight: bold !important;
+        margin-top: 8pt;
+        margin-bottom: 4pt;
+    }
+
+    /* Code blocks - 12pt */
+    #output pre {
+        font-size: 12pt !important;
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        border: 1px solid #d1d5db !important;
+        background-color: #f3f4f6 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+        padding: 8pt !important;
+        margin: 8pt 0 !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        border-radius: 4pt !important;
+        display: block !important;
+        page-break-inside: auto;
+    }
+
+    #output pre code {
+        font-size: 12pt !important;
+        background-color: transparent !important;
+        padding: 0 !important;
+        border: none !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        display: block !important;
+        white-space: pre-wrap !important;
+    }
+
+    /* Inline code - 12pt */
+    #output code {
+        font-size: 11pt !important;
+        background-color: #f3f4f6 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+        padding: 2pt 4pt !important;
+        border-radius: 3pt !important;
+        font-family: 'Courier New', Courier, monospace !important;
+        color: #db2777 !important;
+    }
+
+    /* Paragraphs - 12pt */
+    #output p,
+    p {
+        font-size: 12pt !important;
+        margin-bottom: 3pt;
+    }
+
+    /* Divs - 12pt */
+    #output div,
+    div {
+        font-size: 12pt !important;
+        margin-bottom: 2pt;
+    }
+
+    /* Spans - 12pt */
+    #output span,
+    span {
+        font-size: 12pt !important;
+    }
+
+    /* Strong and em - 12pt */
+    #output strong,
+    #output em,
+    strong,
+    em {
+        font-size: 12pt !important;
+    }
+
+    /* Ensure bullets show in PDF */
+    #output .flex {
+        display: flex !important;
+    }
+
+    #output .gap-3 {
+        gap: 8pt !important;
+    }
+
+    /* Bullet points */
+    #output .w-1\.5 {
+        width: 4pt !important;
+        height: 4pt !important;
+        margin-top: 6pt !important;
+    }
+
+    #output .bg-primary {
+        background-color: #6366f1 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    #output .border-primary {
+        border-color: #6366f1 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    #output .rounded-full {
+        border-radius: 50% !important;
+    }
+
+    /* Margins */
+    #output .ml-4 {
+        margin-left: 16pt !important;
+    }
+
+    #output .ml-8 {
+        margin-left: 32pt !important;
+    }
+
+    #output .ml-12 {
+        margin-left: 48pt !important;
+    }
+
+    #output .mb-1 {
+        margin-bottom: 3pt !important;
+    }
+
+    #output .mb-2 {
+        margin-bottom: 6pt !important;
+    }
+
+    #output .mt-3 {
+        margin-top: 6pt !important;
+    }
+
+    #output .mt-4 {
+        margin-top: 8pt !important;
+    }
+
+    #output .mt-6 {
+        margin-top: 10pt !important;
+    }
+
+    #output .mb-3 {
+        margin-bottom: 4pt !important;
+    }
+}
