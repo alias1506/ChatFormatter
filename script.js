@@ -102,10 +102,7 @@ function processText() {
                 ? '<span class="flex-none w-1.5 h-1.5 mt-2.5 border border-primary rounded-full"></span>' // Hollow
                 : '<span class="flex-none w-1.5 h-1.5 mt-2.5 bg-primary rounded-full"></span>'; // Solid
 
-            formattedHTML += `<div class="flex gap-3 mb-1 ${indentClass}">
-                ${bullet}
-                <span class="text-gray-700 flex-1">${applyInlineFormatting(cleanContent)}</span>
-             </div>`;
+            formattedHTML += `<div class="flex gap-3 mb-1 ${indentClass}">${bullet}<span class="text-gray-700 flex-1">${applyInlineFormatting(cleanContent)}</span></div>`;
             return;
         }
 
@@ -142,6 +139,9 @@ function processText() {
 }
 
 function applyInlineFormatting(text) {
+    // First, collapse all newlines and multiple spaces into single spaces
+    text = text.replace(/\s+/g, ' ').trim();
+    
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
     text = text.replace(/__(.*?)__/g, '<strong class="font-bold text-gray-900">$1</strong>');
     text = text.replace(/([^\\])\*([^\s*].*?[^\s*])\*/g, '$1<em class="italic text-gray-600">$2</em>');
@@ -204,6 +204,19 @@ function downloadWord() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Word Downloaded',
+        text: 'Your formatted document is ready!',
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: {
+            popup: 'rounded-lg',
+            title: 'text-gray-800 font-semibold',
+            htmlContainer: 'text-gray-600'
+        }
+    });
 }
 
 function downloadPDF() {
@@ -214,12 +227,280 @@ function downloadPDF() {
         return;
     }
 
-    // Force print to work on mobile
-    if (typeof window.print === 'function') {
-        window.print();
-    } else {
-        alert('Print is not supported on this browser. Please use your browser\'s share menu to print or save as PDF.');
+    try {
+        const content = [];
+        const children = Array.from(output.children);
+        
+        children.forEach(child => {
+            const parsed = parseElement(child);
+            if (parsed) {
+                content.push(parsed);
+            }
+        });
+        
+        const docDefinition = {
+            content: content.length > 0 ? content : [{ text: 'No content to display', style: 'paragraph' }],
+            pageSize: 'A4',
+            pageMargins: [28, 28, 28, 50],
+            defaultStyle: {
+                fontSize: 12,
+                lineHeight: 1.4
+            },
+            styles: {
+                header: {
+                    fontSize: 16,
+                    bold: true,
+                    margin: [0, 15, 0, 10],
+                    color: '#111827'
+                },
+                codeBlock: {
+                    fontSize: 10,
+                    background: '#f9fafb',
+                    margin: [0, 10, 0, 10],
+                    fillColor: '#f9fafb'
+                },
+                bullet: {
+                    margin: [0, 3, 0, 3]
+                },
+                paragraph: {
+                    margin: [0, 5, 0, 5]
+                }
+            },
+            footer: function(currentPage, pageCount) {
+                return {
+                    text: currentPage.toString() + ' of ' + pageCount,
+                    alignment: 'center',
+                    fontSize: 10,
+                    margin: [0, 10, 0, 0]
+                };
+            }
+        };
+
+        pdfMake.createPdf(docDefinition).download('formatted-document.pdf');
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'PDF Downloaded',
+            text: 'Your formatted document is ready!',
+            timer: 2000,
+            showConfirmButton: false,
+            customClass: {
+                popup: 'rounded-lg',
+                title: 'text-gray-800 font-semibold',
+                htmlContainer: 'text-gray-600'
+            }
+        });
+        
+    } catch (error) {
+        console.error('PDF failed:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Download Failed',
+            text: 'PDF generation failed. Please try Word format instead.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#6366f1',
+            customClass: {
+                popup: 'rounded-lg',
+                title: 'text-gray-800 font-semibold',
+                htmlContainer: 'text-gray-600',
+                confirmButton: 'rounded-lg px-6 py-2'
+            }
+        });
     }
+}
+
+function parseElement(element) {
+    if (!element || !element.tagName) return null;
+    
+    const tag = element.tagName.toLowerCase();
+    const text = element.textContent || '';
+    
+    // Headings (includes questions with numbers like "1(i)", "2.", etc.)
+    if (tag === 'h3' || tag === 'h2' || tag === 'h1') {
+        return {
+            text: getTextWithFormatting(element),
+            style: 'header',
+            margin: [0, 12, 0, 8]
+        };
+    }
+    
+    // Code blocks
+    if (tag === 'pre') {
+        const codeEl = element.querySelector('code');
+        const codeText = codeEl ? codeEl.textContent : element.textContent;
+        return {
+            text: codeText,
+            style: 'codeBlock',
+            preserveLeadingSpaces: true
+        };
+    }
+    
+    // Bullet points (div with flex class)
+    if (tag === 'div' && element.classList.contains('flex')) {
+        // Find the text span - it could be .flex-1, .text-gray-700, or just a span
+        const textSpan = element.querySelector('span.flex-1, span.text-gray-700, span:last-child');
+        
+        if (textSpan && textSpan.textContent.trim()) {
+            const isSubpoint = element.classList.contains('ml-4') || 
+                             element.classList.contains('ml-8') || 
+                             element.classList.contains('ml-12');
+            
+            // Get the text and force it to be on one line
+            const rawText = textSpan.innerHTML;
+            // Remove all HTML tags and decode entities, then collapse whitespace
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = rawText;
+            let plainText = tempDiv.textContent || tempDiv.innerText || '';
+            // Replace all newlines and multiple spaces with single space
+            plainText = plainText.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+            
+            // Now apply formatting to the cleaned text
+            const bulletText = parseFormattedText(textSpan, plainText);
+            
+            // Use pdfmake's built-in list format
+            return {
+                ul: [bulletText],
+                margin: isSubpoint ? [20, 2, 0, 2] : [0, 2, 0, 2],
+                type: isSubpoint ? 'circle' : 'disc'
+            };
+        }
+        
+        // If no text found, return null to skip this element
+        return null;
+    }
+    
+    // Strong/bold blocks (for section headings that end with colon)
+    if (tag === 'strong') {
+        return {
+            text: getTextWithFormatting(element),
+            bold: true,
+            margin: [0, 8, 0, 3]
+        };
+    }
+    
+    // Regular paragraphs
+    if (tag === 'p') {
+        if (!text.trim()) return null;
+        
+        const textContent = getTextWithFormatting(element);
+        if (textContent) {
+            return {
+                text: textContent,
+                style: 'paragraph'
+            };
+        }
+    }
+    
+    // Generic divs that contain text (but not flex items)
+    if (tag === 'div' && !element.classList.contains('flex') && text.trim()) {
+        const textContent = getTextWithFormatting(element);
+        if (textContent) {
+            // Check if it's a numbered item like "1.", "a.", "i."
+            const firstText = typeof textContent === 'string' ? textContent : 
+                            Array.isArray(textContent) ? textContent[0] : '';
+            
+            if (typeof firstText === 'string' && /^([a-z]|\d+|[ivx]+)[\.:\)]\s/i.test(firstText)) {
+                return {
+                    text: textContent,
+                    margin: [0, 3, 0, 3],
+                    bold: true
+                };
+            }
+            
+            return {
+                text: textContent,
+                style: 'paragraph'
+            };
+        }
+    }
+    
+    return null;
+}
+
+function getTextWithFormatting(element) {
+    if (!element) return '';
+    
+    const result = [];
+    
+    function processNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent;
+            // Replace multiple spaces/newlines with single space for inline text
+            return text.replace(/\s+/g, ' ');
+        }
+        
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const tag = node.tagName.toLowerCase();
+            
+            // Skip bullet spans (visual only)
+            if (tag === 'span' && (node.classList.contains('w-1.5') || node.classList.contains('flex-none'))) {
+                return '';
+            }
+            
+            const children = Array.from(node.childNodes).map(processNode);
+            const text = children.join('');
+            
+            if (!text.trim()) return '';
+            
+            // Bold - increase font size slightly for bolder appearance
+            if (tag === 'strong' || tag === 'b') {
+                return { text: text, bold: true, fontSize: 13 };
+            }
+            
+            // Italic
+            if (tag === 'em' || tag === 'i') {
+                return { text: text, italics: true };
+            }
+            
+            // Code (inline)
+            if (tag === 'code') {
+                return { text: text, background: '#f3f4f6' };
+            }
+            
+            // Line break - use space instead for inline content
+            if (tag === 'br') {
+                return ' ';
+            }
+            
+            // Span elements - just return their text
+            if (tag === 'span') {
+                return text;
+            }
+            
+            return text;
+        }
+        
+        return '';
+    }
+    
+    Array.from(element.childNodes).forEach(node => {
+        const processed = processNode(node);
+        if (processed !== '') {
+            result.push(processed);
+        }
+    });
+    
+    // Flatten and clean up result
+    if (result.length === 0) return '';
+    
+    let finalText;
+    if (result.length === 1) {
+        finalText = result[0];
+    } else {
+        finalText = result;
+    }
+    
+    // If it's a string, clean up extra spaces
+    if (typeof finalText === 'string') {
+        finalText = finalText.replace(/\s+/g, ' ').trim();
+    }
+    
+    return finalText;
+}
+
+function parseFormattedText(element, plainText) {
+    // Just return the plain text for now - simple and reliable
+    return plainText;
 }
 
 function showToast() {

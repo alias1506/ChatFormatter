@@ -21,7 +21,8 @@ A clean, minimal web-based text formatter designed to transform AI-generated or 
 - **Responsive Design** - Works seamlessly on desktop and mobile devices
 - **Print Optimization** - PDF exports are optimized with minimal margins and 12pt font size
 - **Real-time Preview** - See formatted output instantly as you process text
-- **Zero Dependencies** - Pure vanilla JavaScript with no external libraries
+- **Success Notifications** - Beautiful SweetAlert2 notifications for download status
+- **Mobile Optimized** - Export dropdown menu and centered layout for mobile devices
 
 ## 🚀 Getting Started
 
@@ -56,19 +57,33 @@ ChatFormatter intelligently processes your text with these rules:
 
 ## 🎨 PDF & Word Export Features
 
-- **Font Size**: 12pt for body text, 14pt for headings
-- **Margins**: Minimal 0.5cm margins to maximize content space
-- **Code Blocks**: Gray background with monospace font
-- **Spacing**: Optimized line height and element spacing
-- **Page Numbers**: Automatic page numbering in PDF exports
+### PDF Export (via pdfMake)
+- **Font Size**: 12pt for body text, 16pt for headings, 13pt for bold text
+- **Margins**: 10mm equal margins on all sides with 18mm bottom for page numbers
+- **Page Numbers**: Automatic "X of Y" page numbering centered at bottom
+- **Code Blocks**: Gray background with preserved formatting
+- **Bullet Points**: Proper bullet symbols (● for main, ◦ for sub-points)
+- **Text-based**: High-quality text rendering (not image-based)
+- **Line Preservation**: Text stays on single lines without breaking incorrectly
+
+### Word Export
+- **Format**: Microsoft Word (.doc) compatible
+- **Inline Styles**: All formatting preserved in Word
 - **Clean Output**: Only formatted content - no UI elements or toolbars
+
+### Notifications
+- **Success Alerts**: Minimal 2-second auto-dismiss notifications on successful download
+- **Error Handling**: User-friendly error messages with retry suggestions
+- **Design**: Matches application's minimal flat design aesthetic
 
 ## 💻 Technology Stack
 
 - **HTML5** - Semantic markup
 - **CSS3** - Modern styling with Tailwind CSS via CDN
 - **Vanilla JavaScript** - No frameworks, pure ES6+
-- **Print CSS** - Optimized print stylesheets for PDF generation
+- **pdfMake** - Professional PDF generation library
+- **SweetAlert2** - Beautiful, responsive alert notifications
+- **Google Fonts** - Inter font family for clean typography
 
 ## 📁 Project Structure
 
