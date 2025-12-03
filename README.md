@@ -1,5 +1,11 @@
 # ChatFormatter
 
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
 A clean, minimal web-based text formatter designed to transform AI-generated or unformatted text into professionally formatted documents. Perfect for converting ChatGPT responses, code snippets, and markdown content into print-ready PDFs and Word documents.
 
 ## ✨ Features
@@ -70,44 +76,6 @@ ChatFormatter/
 └── README.md       # Documentation
 ```
 
-## 🔧 Customization
-
-### Modify Font Size
-
-Edit the `@media print` section in `style.css`:
-
-```css
-body {
-    font-size: 12pt !important; /* Change this value */
-}
-```
-
-### Adjust Page Margins
-
-Modify the `@page` settings in `style.css`:
-
-```css
-@page {
-    margin: 0.5cm; /* Adjust margin size */
-}
-```
-
-### Change Theme Colors
-
-Update the Tailwind config in `index.html`:
-
-```javascript
-tailwind.config = {
-    theme: {
-        extend: {
-            colors: {
-                primary: '#6366f1', /* Change primary color */
-            }
-        }
-    }
-}
-```
-
 ## 🌐 Browser Support
 
 - ✅ Chrome/Edge (Recommended)
@@ -137,18 +105,6 @@ Contributions are welcome! Feel free to:
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
-
-## 👤 Author
-
-**alias1506**
-
-- GitHub: [@alias1506](https://github.com/alias1506)
-
-## 🙏 Acknowledgments
-
-- Built with [Tailwind CSS](https://tailwindcss.com/)
-- Inspired by the need for clean AI content formatting
-- Font: [Inter](https://fonts.google.com/specimen/Inter)
 
 ---
 
