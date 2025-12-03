@@ -26,31 +26,87 @@ function processText() {
     // Remove leading garbage (single dots, commas, etc. at start of text)
     // Only remove dots/commas/whitespace, NOT markdown chars like * or - or #
     text = text.replace(/^[\s\.\,]+/, '');
+    
+    // Replace corrupted angle brackets with parentheses for compatibility
+    text = text.replace(/􀀀/g, '(');  // Opening bracket
+    text = text.replace(/\uDB40\uDC00/g, '(');  // Surrogate pair
+    text = text.replace(/\uFFFD/g, '(');  // Replacement char
+    text = text.replace(/⟨/g, '(');  // Mathematical left angle bracket
+    text = text.replace(/⟩/g, ')');  // Mathematical right angle bracket
+    
+    // Fix spacing corruption from the garbage characters
+    text = text.replace(/array\[0\]\)a,\s*rray\[1\]/g, 'array[0], array[1]');
+    text = text.replace(/\)([a-z]),\s*([a-z])rray/g, ')$1, $2rray');
 
-    // --- 1. Process Lines (Stateful for Code Blocks) ---
+    // --- 1. Process Lines (Stateful for Code Blocks and Tables) ---
     let lines = text.split('\n');
     let formattedHTML = '';
     let inCodeBlock = false;
+    let inTable = false;
+    let tableLines = [];
 
-    lines.forEach(line => {
+    lines.forEach((line, index) => {
         // Check for Code Block Delimiter (```)
         if (line.trim().startsWith('```')) {
+            // If we're in a table, end it first
+            if (inTable && tableLines.length > 0) {
+                formattedHTML += buildTableHTML(tableLines);
+                inTable = false;
+                tableLines = [];
+            }
+            
             if (inCodeBlock) {
-                // End Code Block
                 formattedHTML += '</code></pre>\n';
                 inCodeBlock = false;
             } else {
-                // Start Code Block
                 formattedHTML += '<pre contenteditable="false" class="bg-gray-50 text-gray-800 p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm shadow-sm border border-gray-200"><code>';
                 inCodeBlock = true;
             }
             return;
         }
 
-        // Inside Code Block: Preserve content exactly
+        // Inside Code Block: Preserve content exactly (no escaping)
         if (inCodeBlock) {
-            formattedHTML += escapeHtml(line) + '\n';
+            formattedHTML += line + '\n';
             return;
+        }
+        
+        // Check if this line is part of a table (has at least 2 | characters)
+        const trimmed = line.trim();
+        const pipeCount = (line.match(/\|/g) || []).length;
+        
+        if (pipeCount >= 2 && trimmed.length > 0) {
+            // Check if it's a separator line
+            if (/^\s*\|[\s\-:|]+\|\s*$/.test(line)) {
+                inTable = true;
+                return; // Skip separator
+            }
+            
+            // This is a table data line
+            if (!inTable) {
+                inTable = true;
+                tableLines = [];
+            }
+            tableLines.push(line);
+            
+            // Check if next line is also a table line
+            const nextLine = lines[index + 1];
+            const nextPipes = nextLine ? (nextLine.match(/\|/g) || []).length : 0;
+            
+            // If next line is not a table, render the table now
+            if (nextPipes < 2) {
+                formattedHTML += buildTableHTML(tableLines);
+                inTable = false;
+                tableLines = [];
+            }
+            return;
+        }
+        
+        // Not a table line - if we were building a table, finish it
+        if (inTable && tableLines.length > 0) {
+            formattedHTML += buildTableHTML(tableLines);
+            inTable = false;
+            tableLines = [];
         }
 
         // --- Normal Text Processing ---
@@ -120,6 +176,14 @@ function processText() {
             return;
         }
 
+        // Code-like lines (contains array notation, brackets, special chars)
+        if (/[⟨⟩<>\[\]{}]|array\[|\.\.\./.test(content)) {
+            // Don't escape HTML entities - preserve special characters as-is
+            const preservedContent = content.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+            formattedHTML += `<pre class="bg-gray-50 text-gray-800 px-3 py-2 rounded my-2 font-mono text-sm ${indentClass}">${preservedContent}</pre>`;
+            return;
+        }
+        
         // Important Points (Ends with :)
         if (content.length < 80 && content.endsWith(':')) {
             formattedHTML += `<strong class="font-bold text-gray-800 block mt-3 mb-1 ${indentClass}">${applyInlineFormatting(content)}</strong>`;
@@ -129,6 +193,11 @@ function processText() {
         // Regular Paragraph
         formattedHTML += `<p class="mb-2 leading-relaxed text-gray-600 ${indentClass}">${applyInlineFormatting(content)}</p>`;
     });
+    
+    // If we ended while in a table, render it
+    if (inTable && tableLines.length > 0) {
+        formattedHTML += buildTableHTML(tableLines);
+    }
 
     const outputField = document.getElementById('output');
     outputField.innerHTML = formattedHTML;
@@ -152,6 +221,34 @@ function applyInlineFormatting(text) {
 
 function escapeHtml(text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function buildTableHTML(rows) {
+    if (rows.length === 0) return '';
+    
+    let html = '<div class="overflow-x-auto my-4"><table class="min-w-full border-collapse border border-gray-300">';
+    
+    rows.forEach((row, index) => {
+        // Split by | 
+        let cells = row.split('|');
+        // Remove first and last if empty
+        if (cells[0].trim() === '') cells.shift();
+        if (cells[cells.length - 1].trim() === '') cells.pop();
+        
+        html += '<tr>';
+        cells.forEach(cell => {
+            const cellContent = cell.trim();
+            if (index === 0) {
+                html += `<th class="border border-gray-300 bg-gray-100 px-4 py-2 text-left font-semibold text-gray-900">${cellContent}</th>`;
+            } else {
+                html += `<td class="border border-gray-300 px-4 py-2 text-gray-700">${cellContent}</td>`;
+            }
+        });
+        html += '</tr>';
+    });
+    
+    html += '</table></div>';
+    return html;
 }
 
 function clearText(id) {
@@ -276,6 +373,16 @@ function downloadPDF() {
                 },
                 paragraph: {
                     margin: [0, 5, 0, 5]
+                },
+                tableHeader: {
+                    bold: true,
+                    fontSize: 11,
+                    color: '#111827',
+                    fillColor: '#f3f4f6'
+                },
+                tableCell: {
+                    fontSize: 11,
+                    color: '#374151'
                 }
             },
             footer: function(currentPage, pageCount) {
@@ -326,6 +433,19 @@ function parseElement(element) {
     
     const tag = element.tagName.toLowerCase();
     const text = element.textContent || '';
+    
+    // Check if this div contains a table
+    if (tag === 'div' && element.classList.contains('overflow-x-auto')) {
+        const table = element.querySelector('table');
+        if (table) {
+            return parseTable(table);
+        }
+    }
+    
+    // Tables (direct)
+    if (tag === 'table') {
+        return parseTable(element);
+    }
     
     // Headings (includes questions with numbers like "1(i)", "2.", etc.)
     if (tag === 'h3' || tag === 'h2' || tag === 'h1') {
@@ -513,6 +633,60 @@ function getTextWithFormatting(element) {
 function parseFormattedText(element, plainText) {
     // Just return the plain text for now - simple and reliable
     return plainText;
+}
+
+function parseTable(tableElement) {
+    const rows = Array.from(tableElement.querySelectorAll('tr'));
+    if (rows.length === 0) return null;
+    
+    const tableBody = [];
+    
+    rows.forEach((row, rowIndex) => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        const rowData = cells.map(cell => {
+            // Get raw text content, preserving special characters
+            let text = cell.textContent || cell.innerText || '';
+            // Only collapse multiple spaces, don't strip special characters
+            text = text.replace(/ {2,}/g, ' ').trim();
+            
+            return { 
+                text: text, 
+                bold: rowIndex === 0,
+                fontSize: 10,
+                margin: [3, 3, 3, 3],
+                preserveLeadingSpaces: false
+            };
+        });
+        
+        tableBody.push(rowData);
+    });
+    
+    // Use auto widths for better fitting
+    const colCount = tableBody[0] ? tableBody[0].length : 0;
+    const widths = Array(colCount).fill('*');
+    
+    return {
+        table: {
+            headerRows: 1,
+            widths: widths,
+            body: tableBody,
+            dontBreakRows: true
+        },
+        layout: {
+            fillColor: function(rowIndex) {
+                return rowIndex === 0 ? '#f3f4f6' : null;
+            },
+            hLineWidth: function() { return 0.5; },
+            vLineWidth: function() { return 0.5; },
+            hLineColor: function() { return '#d1d5db'; },
+            vLineColor: function() { return '#d1d5db'; },
+            paddingLeft: function() { return 5; },
+            paddingRight: function() { return 5; },
+            paddingTop: function() { return 4; },
+            paddingBottom: function() { return 4; }
+        },
+        margin: [0, 8, 0, 8]
+    };
 }
 
 function showToast() {
