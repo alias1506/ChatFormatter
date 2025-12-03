@@ -231,3 +231,18 @@ document.addEventListener('click', function(event) {
         menu.classList.add('hidden');
     }
 });
+
+// Suppress browser extension storage errors
+window.addEventListener('error', function(e) {
+    if (e.message && e.message.includes('storage')) {
+        e.preventDefault();
+        return true;
+    }
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+    if (e.reason && e.reason.message && e.reason.message.includes('storage')) {
+        e.preventDefault();
+        return true;
+    }
+});

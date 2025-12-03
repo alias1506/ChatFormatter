@@ -8,6 +8,10 @@
 
 A clean, minimal web-based text formatter designed to transform AI-generated or unformatted text into professionally formatted documents. Perfect for converting ChatGPT responses, code snippets, and markdown content into print-ready PDFs and Word documents.
 
+## 🌐 Live Demo
+
+**[Try ChatFormatter Now →](https://resilient-paletas-ad05c6.netlify.app/)**
+
 ## ✨ Features
 
 - **Smart Text Processing** - Automatically removes AI watermarks, cleanup artifacts, and formats text intelligently
