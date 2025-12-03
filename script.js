@@ -214,15 +214,11 @@ function downloadPDF() {
         return;
     }
 
-    // Ensure print works on all devices
-    try {
-        // Small delay to ensure event completes on mobile
-        setTimeout(() => {
-            window.print();
-        }, 100);
-    } catch (error) {
-        console.error('Print failed:', error);
-        alert('Unable to open print dialog. Please try using your browser menu: Menu > Print');
+    // Force print to work on mobile
+    if (typeof window.print === 'function') {
+        window.print();
+    } else {
+        alert('Print is not supported on this browser. Please use your browser\'s share menu to print or save as PDF.');
     }
 }
 
