@@ -217,3 +217,17 @@ function showToast() {
         toast.classList.add('translate-y-20', 'opacity-0');
     }, 2000);
 }
+
+function toggleExportMenu() {
+    const menu = document.getElementById('exportMenu');
+    menu.classList.toggle('hidden');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById('exportMenu');
+    const btn = document.getElementById('exportMenuBtn');
+    if (menu && btn && !menu.contains(event.target) && !btn.contains(event.target)) {
+        menu.classList.add('hidden');
+    }
+});
