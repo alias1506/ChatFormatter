@@ -223,7 +223,19 @@ function downloadPDF() {
     const output = document.getElementById('output');
     
     if (!output.innerHTML.trim()) {
-        alert('Please format some text first!');
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Content',
+            text: 'Please format some text first!',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#6366f1',
+            customClass: {
+                popup: 'rounded-lg',
+                title: 'text-gray-800 font-semibold',
+                htmlContainer: 'text-gray-600',
+                confirmButton: 'rounded-lg px-6 py-2'
+            }
+        });
         return;
     }
 
