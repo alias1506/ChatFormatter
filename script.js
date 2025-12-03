@@ -214,8 +214,16 @@ function downloadPDF() {
         return;
     }
 
-    // Use browser's print dialog which gives best results
-    window.print();
+    // Ensure print works on all devices
+    try {
+        // Small delay to ensure event completes on mobile
+        setTimeout(() => {
+            window.print();
+        }, 100);
+    } catch (error) {
+        console.error('Print failed:', error);
+        alert('Unable to open print dialog. Please try using your browser menu: Menu > Print');
+    }
 }
 
 function showToast() {
