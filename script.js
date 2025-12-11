@@ -21,19 +21,23 @@ function processText() {
         /^Let me know.*?$/im
     ];
     aiPhrases.forEach(regex => { text = text.replace(regex, ''); });
+
+    // Remove Emojis (Surrogate pairs and common ranges)
+    text = text.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDC00-\uDFFF])/g, '');
+
     text = text.replace(/[\u200B-\u200D\uFEFF]/g, '');
 
     // Remove leading garbage (single dots, commas, etc. at start of text)
     // Only remove dots/commas/whitespace, NOT markdown chars like * or - or #
     text = text.replace(/^[\s\.\,]+/, '');
-    
+
     // Replace corrupted angle brackets with parentheses for compatibility
     text = text.replace(/􀀀/g, '(');  // Opening bracket
     text = text.replace(/\uDB40\uDC00/g, '(');  // Surrogate pair
     text = text.replace(/\uFFFD/g, '(');  // Replacement char
     text = text.replace(/⟨/g, '(');  // Mathematical left angle bracket
     text = text.replace(/⟩/g, ')');  // Mathematical right angle bracket
-    
+
     // Fix spacing corruption from the garbage characters
     text = text.replace(/array\[0\]\)a,\s*rray\[1\]/g, 'array[0], array[1]');
     text = text.replace(/\)([a-z]),\s*([a-z])rray/g, ')$1, $2rray');
@@ -54,7 +58,7 @@ function processText() {
                 inTable = false;
                 tableLines = [];
             }
-            
+
             if (inCodeBlock) {
                 formattedHTML += '</code></pre>\n';
                 inCodeBlock = false;
@@ -70,29 +74,29 @@ function processText() {
             formattedHTML += line + '\n';
             return;
         }
-        
+
         // Check if this line is part of a table (has at least 2 | characters)
         const trimmed = line.trim();
         const pipeCount = (line.match(/\|/g) || []).length;
-        
+
         if (pipeCount >= 2 && trimmed.length > 0) {
             // Check if it's a separator line
             if (/^\s*\|[\s\-:|]+\|\s*$/.test(line)) {
                 inTable = true;
                 return; // Skip separator
             }
-            
+
             // This is a table data line
             if (!inTable) {
                 inTable = true;
                 tableLines = [];
             }
             tableLines.push(line);
-            
+
             // Check if next line is also a table line
             const nextLine = lines[index + 1];
             const nextPipes = nextLine ? (nextLine.match(/\|/g) || []).length : 0;
-            
+
             // If next line is not a table, render the table now
             if (nextPipes < 2) {
                 formattedHTML += buildTableHTML(tableLines);
@@ -101,7 +105,7 @@ function processText() {
             }
             return;
         }
-        
+
         // Not a table line - if we were building a table, finish it
         if (inTable && tableLines.length > 0) {
             formattedHTML += buildTableHTML(tableLines);
@@ -143,7 +147,7 @@ function processText() {
         // Headings (Markdown #)
         if (content.startsWith('#')) {
             const headingContent = content.replace(/^#+\s*/, '');
-            formattedHTML += `<h3 class="text-lg font-bold text-gray-900 mt-6 mb-3 ${indentClass}">${applyInlineFormatting(headingContent)}</h3>`;
+            formattedHTML += `<h3 class="text-base font-bold leading-tight text-gray-900 mt-6 mb-3 ${indentClass}">${applyInlineFormatting(headingContent)}</h3>`;
             return;
         }
 
@@ -183,7 +187,7 @@ function processText() {
             formattedHTML += `<pre class="bg-gray-50 text-gray-800 px-3 py-2 rounded my-2 font-mono text-sm ${indentClass}">${preservedContent}</pre>`;
             return;
         }
-        
+
         // Important Points (Ends with :)
         if (content.length < 80 && content.endsWith(':')) {
             formattedHTML += `<strong class="font-bold text-gray-800 block mt-3 mb-1 ${indentClass}">${applyInlineFormatting(content)}</strong>`;
@@ -193,7 +197,7 @@ function processText() {
         // Regular Paragraph
         formattedHTML += `<p class="mb-2 leading-relaxed text-gray-600 ${indentClass}">${applyInlineFormatting(content)}</p>`;
     });
-    
+
     // If we ended while in a table, render it
     if (inTable && tableLines.length > 0) {
         formattedHTML += buildTableHTML(tableLines);
@@ -210,7 +214,7 @@ function processText() {
 function applyInlineFormatting(text) {
     // First, collapse all newlines and multiple spaces into single spaces
     text = text.replace(/\s+/g, ' ').trim();
-    
+
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
     text = text.replace(/__(.*?)__/g, '<strong class="font-bold text-gray-900">$1</strong>');
     text = text.replace(/([^\\])\*([^\s*].*?[^\s*])\*/g, '$1<em class="italic text-gray-600">$2</em>');
@@ -225,16 +229,16 @@ function escapeHtml(text) {
 
 function buildTableHTML(rows) {
     if (rows.length === 0) return '';
-    
+
     let html = '<div class="overflow-x-auto my-4"><table class="min-w-full border-collapse border border-gray-300">';
-    
+
     rows.forEach((row, index) => {
         // Split by | 
         let cells = row.split('|');
         // Remove first and last if empty
         if (cells[0].trim() === '') cells.shift();
         if (cells[cells.length - 1].trim() === '') cells.pop();
-        
+
         html += '<tr>';
         cells.forEach(cell => {
             const cellContent = cell.trim();
@@ -246,7 +250,7 @@ function buildTableHTML(rows) {
         });
         html += '</tr>';
     });
-    
+
     html += '</table></div>';
     return html;
 }
@@ -301,7 +305,7 @@ function downloadWord() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     Swal.fire({
         icon: 'success',
         title: 'Word Downloaded',
@@ -318,7 +322,7 @@ function downloadWord() {
 
 function downloadPDF() {
     const output = document.getElementById('output');
-    
+
     if (!output.innerHTML.trim()) {
         Swal.fire({
             icon: 'warning',
@@ -339,27 +343,28 @@ function downloadPDF() {
     try {
         const content = [];
         const children = Array.from(output.children);
-        
+
         children.forEach(child => {
             const parsed = parseElement(child);
             if (parsed) {
                 content.push(parsed);
             }
         });
-        
+
         const docDefinition = {
             content: content.length > 0 ? content : [{ text: 'No content to display', style: 'paragraph' }],
             pageSize: 'A4',
             pageMargins: [28, 28, 28, 50],
             defaultStyle: {
                 fontSize: 12,
-                lineHeight: 1.4
+                lineHeight: 1.15
             },
             styles: {
                 header: {
-                    fontSize: 16,
+                    fontSize: 12,
                     bold: true,
-                    margin: [0, 15, 0, 10],
+                    lineHeight: 1.1,
+                    margin: [0, 5, 0, 3],
                     color: '#111827'
                 },
                 codeBlock: {
@@ -369,10 +374,10 @@ function downloadPDF() {
                     fillColor: '#f9fafb'
                 },
                 bullet: {
-                    margin: [0, 3, 0, 3]
+                    margin: [0, 2, 0, 2]
                 },
                 paragraph: {
-                    margin: [0, 5, 0, 5]
+                    margin: [0, 2, 0, 2]
                 },
                 tableHeader: {
                     bold: true,
@@ -385,7 +390,7 @@ function downloadPDF() {
                     color: '#374151'
                 }
             },
-            footer: function(currentPage, pageCount) {
+            footer: function (currentPage, pageCount) {
                 return {
                     text: currentPage.toString() + ' of ' + pageCount,
                     alignment: 'center',
@@ -396,7 +401,7 @@ function downloadPDF() {
         };
 
         pdfMake.createPdf(docDefinition).download('formatted-document.pdf');
-        
+
         Swal.fire({
             icon: 'success',
             title: 'PDF Downloaded',
@@ -409,7 +414,7 @@ function downloadPDF() {
                 htmlContainer: 'text-gray-600'
             }
         });
-        
+
     } catch (error) {
         console.error('PDF failed:', error);
         Swal.fire({
@@ -430,10 +435,10 @@ function downloadPDF() {
 
 function parseElement(element) {
     if (!element || !element.tagName) return null;
-    
+
     const tag = element.tagName.toLowerCase();
     const text = element.textContent || '';
-    
+
     // Check if this div contains a table
     if (tag === 'div' && element.classList.contains('overflow-x-auto')) {
         const table = element.querySelector('table');
@@ -441,21 +446,21 @@ function parseElement(element) {
             return parseTable(table);
         }
     }
-    
+
     // Tables (direct)
     if (tag === 'table') {
         return parseTable(element);
     }
-    
+
     // Headings (includes questions with numbers like "1(i)", "2.", etc.)
     if (tag === 'h3' || tag === 'h2' || tag === 'h1') {
         return {
             text: getTextWithFormatting(element),
             style: 'header',
-            margin: [0, 12, 0, 8]
+            margin: [0, 5, 0, 3]
         };
     }
-    
+
     // Code blocks
     if (tag === 'pre') {
         const codeEl = element.querySelector('code');
@@ -466,17 +471,17 @@ function parseElement(element) {
             preserveLeadingSpaces: true
         };
     }
-    
+
     // Bullet points (div with flex class)
     if (tag === 'div' && element.classList.contains('flex')) {
         // Find the text span - it could be .flex-1, .text-gray-700, or just a span
         const textSpan = element.querySelector('span.flex-1, span.text-gray-700, span:last-child');
-        
+
         if (textSpan && textSpan.textContent.trim()) {
-            const isSubpoint = element.classList.contains('ml-4') || 
-                             element.classList.contains('ml-8') || 
-                             element.classList.contains('ml-12');
-            
+            const isSubpoint = element.classList.contains('ml-4') ||
+                element.classList.contains('ml-8') ||
+                element.classList.contains('ml-12');
+
             // Get the text and force it to be on one line
             const rawText = textSpan.innerHTML;
             // Remove all HTML tags and decode entities, then collapse whitespace
@@ -485,10 +490,10 @@ function parseElement(element) {
             let plainText = tempDiv.textContent || tempDiv.innerText || '';
             // Replace all newlines and multiple spaces with single space
             plainText = plainText.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
-            
+
             // Now apply formatting to the cleaned text
             const bulletText = parseFormattedText(textSpan, plainText);
-            
+
             // Use pdfmake's built-in list format
             return {
                 ul: [bulletText],
@@ -496,11 +501,11 @@ function parseElement(element) {
                 type: isSubpoint ? 'circle' : 'disc'
             };
         }
-        
+
         // If no text found, return null to skip this element
         return null;
     }
-    
+
     // Strong/bold blocks (for section headings that end with colon)
     if (tag === 'strong') {
         return {
@@ -509,11 +514,11 @@ function parseElement(element) {
             margin: [0, 8, 0, 3]
         };
     }
-    
+
     // Regular paragraphs
     if (tag === 'p') {
         if (!text.trim()) return null;
-        
+
         const textContent = getTextWithFormatting(element);
         if (textContent) {
             return {
@@ -522,15 +527,15 @@ function parseElement(element) {
             };
         }
     }
-    
+
     // Generic divs that contain text (but not flex items)
     if (tag === 'div' && !element.classList.contains('flex') && text.trim()) {
         const textContent = getTextWithFormatting(element);
         if (textContent) {
             // Check if it's a numbered item like "1.", "a.", "i."
-            const firstText = typeof textContent === 'string' ? textContent : 
-                            Array.isArray(textContent) ? textContent[0] : '';
-            
+            const firstText = typeof textContent === 'string' ? textContent :
+                Array.isArray(textContent) ? textContent[0] : '';
+
             if (typeof firstText === 'string' && /^([a-z]|\d+|[ivx]+)[\.:\)]\s/i.test(firstText)) {
                 return {
                     text: textContent,
@@ -538,95 +543,95 @@ function parseElement(element) {
                     bold: true
                 };
             }
-            
+
             return {
                 text: textContent,
                 style: 'paragraph'
             };
         }
     }
-    
+
     return null;
 }
 
 function getTextWithFormatting(element) {
     if (!element) return '';
-    
+
     const result = [];
-    
+
     function processNode(node) {
         if (node.nodeType === Node.TEXT_NODE) {
             const text = node.textContent;
             // Replace multiple spaces/newlines with single space for inline text
             return text.replace(/\s+/g, ' ');
         }
-        
+
         if (node.nodeType === Node.ELEMENT_NODE) {
             const tag = node.tagName.toLowerCase();
-            
+
             // Skip bullet spans (visual only)
             if (tag === 'span' && (node.classList.contains('w-1.5') || node.classList.contains('flex-none'))) {
                 return '';
             }
-            
+
             const children = Array.from(node.childNodes).map(processNode);
             const text = children.join('');
-            
+
             if (!text.trim()) return '';
-            
+
             // Bold - increase font size slightly for bolder appearance
             if (tag === 'strong' || tag === 'b') {
                 return { text: text, bold: true, fontSize: 13 };
             }
-            
+
             // Italic
             if (tag === 'em' || tag === 'i') {
                 return { text: text, italics: true };
             }
-            
+
             // Code (inline)
             if (tag === 'code') {
                 return { text: text, background: '#f3f4f6' };
             }
-            
+
             // Line break - use space instead for inline content
             if (tag === 'br') {
                 return ' ';
             }
-            
+
             // Span elements - just return their text
             if (tag === 'span') {
                 return text;
             }
-            
+
             return text;
         }
-        
+
         return '';
     }
-    
+
     Array.from(element.childNodes).forEach(node => {
         const processed = processNode(node);
         if (processed !== '') {
             result.push(processed);
         }
     });
-    
+
     // Flatten and clean up result
     if (result.length === 0) return '';
-    
+
     let finalText;
     if (result.length === 1) {
         finalText = result[0];
     } else {
         finalText = result;
     }
-    
+
     // If it's a string, clean up extra spaces
     if (typeof finalText === 'string') {
         finalText = finalText.replace(/\s+/g, ' ').trim();
     }
-    
+
     return finalText;
 }
 
@@ -638,9 +643,9 @@ function parseFormattedText(element, plainText) {
 function parseTable(tableElement) {
     const rows = Array.from(tableElement.querySelectorAll('tr'));
     if (rows.length === 0) return null;
-    
+
     const tableBody = [];
-    
+
     rows.forEach((row, rowIndex) => {
         const cells = Array.from(row.querySelectorAll('th, td'));
         const rowData = cells.map(cell => {
@@ -648,23 +653,23 @@ function parseTable(tableElement) {
             let text = cell.textContent || cell.innerText || '';
             // Only collapse multiple spaces, don't strip special characters
             text = text.replace(/ {2,}/g, ' ').trim();
-            
-            return { 
-                text: text, 
+
+            return {
+                text: text,
                 bold: rowIndex === 0,
                 fontSize: 10,
                 margin: [3, 3, 3, 3],
                 preserveLeadingSpaces: false
             };
         });
-        
+
         tableBody.push(rowData);
     });
-    
+
     // Use auto widths for better fitting
     const colCount = tableBody[0] ? tableBody[0].length : 0;
     const widths = Array(colCount).fill('*');
-    
+
     return {
         table: {
             headerRows: 1,
@@ -673,17 +678,17 @@ function parseTable(tableElement) {
             dontBreakRows: true
         },
         layout: {
-            fillColor: function(rowIndex) {
+            fillColor: function (rowIndex) {
                 return rowIndex === 0 ? '#f3f4f6' : null;
             },
-            hLineWidth: function() { return 0.5; },
-            vLineWidth: function() { return 0.5; },
-            hLineColor: function() { return '#d1d5db'; },
-            vLineColor: function() { return '#d1d5db'; },
-            paddingLeft: function() { return 5; },
-            paddingRight: function() { return 5; },
-            paddingTop: function() { return 4; },
-            paddingBottom: function() { return 4; }
+            hLineWidth: function () { return 0.5; },
+            vLineWidth: function () { return 0.5; },
+            hLineColor: function () { return '#d1d5db'; },
+            vLineColor: function () { return '#d1d5db'; },
+            paddingLeft: function () { return 5; },
+            paddingRight: function () { return 5; },
+            paddingTop: function () { return 4; },
+            paddingBottom: function () { return 4; }
         },
         margin: [0, 8, 0, 8]
     };
@@ -703,7 +708,7 @@ function toggleExportMenu() {
 }
 
 // Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
     const menu = document.getElementById('exportMenu');
     const btn = document.getElementById('exportMenuBtn');
     if (menu && btn && !menu.contains(event.target) && !btn.contains(event.target)) {
@@ -712,14 +717,14 @@ document.addEventListener('click', function(event) {
 });
 
 // Suppress browser extension storage errors
-window.addEventListener('error', function(e) {
+window.addEventListener('error', function (e) {
     if (e.message && e.message.includes('storage')) {
         e.preventDefault();
         return true;
     }
 });
 
-window.addEventListener('unhandledrejection', function(e) {
+window.addEventListener('unhandledrejection', function (e) {
     if (e.reason && e.reason.message && e.reason.message.includes('storage')) {
         e.preventDefault();
         return true;

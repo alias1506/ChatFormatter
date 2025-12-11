@@ -83,10 +83,9 @@ body {
     header,
     button,
     textarea,
-    main > section:first-child,
+    main>section:first-child,
     #input {
         display: none !important;
-        visibility: hidden !important;
         height: 0 !important;
         width: 0 !important;
         margin: 0 !important;
@@ -94,11 +93,10 @@ body {
     }
 
     /* Hide toolbar elements inside sections */
-    section > div.h-12,
-    section > div.flex.items-center,
-    #output-container > div:first-child {
+    section>div.h-12,
+    section>div.flex.items-center,
+    #output-container>div:first-child {
         display: none !important;
-        visibility: hidden !important;
         height: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -123,11 +121,12 @@ body {
         font-size: 12pt !important;
     }
 
-    /* Headings - 14pt */
+    /* Headings - 12pt */
     #output h3,
     h3 {
-        font-size: 14pt !important;
+        font-size: 12pt !important;
         font-weight: bold !important;
+        line-height: 1.1 !important;
         margin-top: 8pt;
         margin-bottom: 4pt;
     }
@@ -141,7 +140,6 @@ body {
         background-color: #f3f4f6 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-        color-adjust: exact;
         padding: 8pt !important;
         margin: 8pt 0 !important;
         font-family: 'Courier New', Courier, monospace !important;
@@ -166,7 +164,6 @@ body {
         background-color: #f3f4f6 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-        color-adjust: exact;
         padding: 2pt 4pt !important;
         border-radius: 3pt !important;
         font-family: 'Courier New', Courier, monospace !important;
