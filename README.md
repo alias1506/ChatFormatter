@@ -14,7 +14,7 @@ A clean, minimal web-based text formatter designed to transform AI-generated or 
 
 ## ✨ Features
 
-- **Smart Text Processing** - Automatically removes AI watermarks, cleanup artifacts, and formats text intelligently
+- **Smart Text Processing** - Automatically removes AI watermarks, cleanup artifacts, emojis, and formats text intelligently
 - **Markdown Support** - Full support for headings, bold, italic, code blocks, and bullet points
 - **Code Highlighting** - Syntax-aware formatting for inline code and code blocks
 - **Multi-Format Export** - Export to PDF, Word (.doc), or copy formatted text to clipboard
@@ -46,20 +46,21 @@ cd ChatFormatter
 
 ChatFormatter intelligently processes your text with these rules:
 
-- **Headings** - Lines starting with `#` become formatted headings
+- **Headings** - Lines starting with `#` become formatted headings (same size as body text, bold)
 - **Bullet Points** - Lines starting with `-`, `*`, `+`, or `•` become bulleted lists with proper indentation
 - **Code Blocks** - Text between ``` markers is formatted as code blocks
 - **Inline Code** - Text between backticks `` ` `` is formatted as inline code
 - **Bold Text** - Text between `**` or `__` becomes bold
 - **Italic Text** - Text between single `*` becomes italic
 - **Indentation** - Preserves and visualizes indentation levels
-- **Smart Cleanup** - Removes AI phrases like "Sure, here is...", "I hope this helps", etc.
+- **Smart Cleanup** - Removes AI phrases like "Sure, here is...", emojis, and cleans up artifacts
 
 ## 🎨 PDF & Word Export Features
 
 ### PDF Export (via pdfMake)
-- **Font Size**: 12pt for body text, 16pt for headings, 13pt for bold text
-- **Margins**: 10mm equal margins on all sides with 18mm bottom for page numbers
+- **Compact Layout**: Reduced line height (1.15) and tight margins for maximum content efficiency
+- **Font Size**: 12pt uniform size for both body text and headings (headings are bold)
+- **Margins**: Minimal vertical spacing optimized for dense technical content
 - **Page Numbers**: Automatic "X of Y" page numbering centered at bottom
 - **Code Blocks**: Gray background with preserved formatting
 - **Bullet Points**: Proper bullet symbols (● for main, ◦ for sub-points)
